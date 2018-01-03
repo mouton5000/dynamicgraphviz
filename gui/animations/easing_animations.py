@@ -5,6 +5,16 @@ This module provides the function `animate` that animates an object with an easi
 functions. Each function is normalized from 0 to 1.
 """
 
+__author__ = "Dimitri Watel"
+__copyright__ = "Copyright 2018, dynamicgraphviz"
+__credits__ = ["Dimitri Watel"]
+__license__ = "MIT"
+__version__ = "0.99"
+__maintainer__ = "Dimitri Watel"
+__email__ = "patatemouton@gmail.com"
+__status__ = "Development"
+
+
 from math import cos, pi, sin
 
 import gi

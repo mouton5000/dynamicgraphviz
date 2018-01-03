@@ -19,6 +19,16 @@ on the window.
 
 """
 
+__author__ = "Dimitri Watel"
+__copyright__ = "Copyright 2018, dynamicgraphviz"
+__credits__ = ["Dimitri Watel"]
+__license__ = "MIT"
+__version__ = "0.99"
+__maintainer__ = "Dimitri Watel"
+__email__ = "patatemouton@gmail.com"
+__status__ = "Development"
+
+
 import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk

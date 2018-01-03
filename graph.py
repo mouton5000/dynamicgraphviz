@@ -14,6 +14,15 @@ is not possible to link them with the graph objects. The graph classes have meth
 of the graphs.
 """
 
+__author__ = "Dimitri Watel"
+__copyright__ = "Copyright 2018, dynamicgraphviz"
+__credits__ = ["Dimitri Watel"]
+__license__ = "MIT"
+__version__ = "0.99"
+__maintainer__ = "Dimitri Watel"
+__email__ = "patatemouton@gmail.com"
+__status__ = "Development"
+
 from pubsub import pub
 from itertools import chain
 from exceptions.graph_errors import *
