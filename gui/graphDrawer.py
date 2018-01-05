@@ -344,10 +344,13 @@ class GraphDrawer(Gtk.Window):
     def place_nodes(self, doanimate=False):
         """Automatically replace all the nodes using a force directed graph drawing algorithm.
 
-        Automatically replace all the nodes using the force directed graph drawing algorithm given at
-        https://cs.brown.edu/~rt/gdhandbook/chapters/force-directed.pdf at page number 387 (5th page of the pdf).
-        The temperature starts at 50 and are multiplied by 2/3 at each iteration. The number of iterations is the
-        maximum of 50 and twice the number of nodes. Those values are purely empirical.
+        Automatically replace all the nodes using an algorithm adapted from the force directed graph drawing algorithm
+        given at https://cs.brown.edu/~rt/gdhandbook/chapters/force-directed.pdf at page number 387 (5th page of the
+        pdf). The temperature starts at 50 and are multiplied by 0.99 at each iteration. The number of iterations is 500
+        times the number of nodes. Those values are purely empirical.
+        A repulsion force from the bounds is added :
+        for each node at position (x, y), there are 4 repulsions from (x, 0), (x, HEIGHT), (0, y) and (WIDTH, y),
+        this forces the nodes to stay away from the boundaries.
 
         If the keyword argument doanimate is True, the moving is animated, otherwise the nodes are instantly moved from
         their current positions to the new ones. The animation is done using the method `move_node`. There is no need
@@ -370,7 +373,7 @@ class GraphDrawer(Gtk.Window):
         def repulsion(mag):
             return k ** 2 / mag
 
-        for _ in range(max(2*len(self.__graph), 50)):
+        for _ in range(500*len(self.__graph)):
             for u in self.__graph.nodes:
                 force = Vector2(0, 0)
                 posu = positions[u]
@@ -380,6 +383,12 @@ class GraphDrawer(Gtk.Window):
                     vu = posu - positions[v]
                     force += vu.normalized() * repulsion(vu.magnitude())
                 forces[u] = force
+
+                bounds = [Vector2(posu.x, 0), Vector2(posu.x, HEIGHT), Vector2(0, posu.y), Vector2(WIDTH, posu.y)]
+
+                for bound in bounds:
+                    boundu = posu - bound
+                    force += boundu.normalized() * repulsion(boundu.magnitude())
 
             for a in self.__graph.links:
                 u, v = a.extremities
@@ -401,7 +410,7 @@ class GraphDrawer(Gtk.Window):
                 force.x = 0
                 force.y = 0
 
-            temp *= 2/3
+            temp *= 0.99
 
         if doanimate:
             for u in self.__graph.nodes:
