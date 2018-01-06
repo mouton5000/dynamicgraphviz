@@ -8,8 +8,8 @@ __email__ = "patatemouton@gmail.com"
 __status__ = "Development"
 
 
-from gui.graphDrawer import GraphDrawer, NODE_LINE_WIDTH
-from graph import DirectedGraph
+from dynamicgraphviz.gui import GraphDrawer, NODE_LINE_WIDTH
+from dynamicgraphviz.graph import DirectedGraph
 
 
 def roy_wharshall(g, gd):

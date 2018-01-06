@@ -19,16 +19,6 @@ on the window.
 
 """
 
-__author__ = "Dimitri Watel"
-__copyright__ = "Copyright 2018, dynamicgraphviz"
-__credits__ = ["Dimitri Watel"]
-__license__ = "MIT"
-__version__ = "0.99"
-__maintainer__ = "Dimitri Watel"
-__email__ = "patatemouton@gmail.com"
-__status__ = "Development"
-
-
 import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk
@@ -36,12 +26,12 @@ import math
 import cairo
 from pubsub import pub
 from euclid3 import Point2, Vector2
-from helpers.geomhelper import rotate
-from gui.animations.easing_animations import get_nb_animating_with_easing, animate_with_easing, sininout
+from dynamicgraphviz.helpers.geomhelper import rotate
+from dynamicgraphviz.gui.animations.easing_animations import get_nb_animating_with_easing, animate_with_easing, sininout
 from copy import copy
-from exceptions.graph_errors import *
-from graph.undirectedgraph import UndirectedNode, Edge
-from graph.directedgraph import DirectedNode, Arc
+from dynamicgraphviz.exceptions.graph_errors import *
+from dynamicgraphviz.graph.undirectedgraph import UndirectedNode, Edge
+from dynamicgraphviz.graph.directedgraph import DirectedNode, Arc
 
 WIDTH = 1400
 """Width of the shown window."""

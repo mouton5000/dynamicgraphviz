@@ -3,12 +3,3 @@
 This package contains all the modules used to animate objects. It currently contains only one module,
 `easing_animations`, that animate objects using the easing functions techniques.
 """
-
-__author__ = "Dimitri Watel"
-__copyright__ = "Copyright 2018, dynamicgraphviz"
-__credits__ = ["Dimitri Watel"]
-__license__ = "MIT"
-__version__ = "0.99"
-__maintainer__ = "Dimitri Watel"
-__email__ = "patatemouton@gmail.com"
-__status__ = "Development"

@@ -8,8 +8,8 @@ __email__ = "patatemouton@gmail.com"
 __status__ = "Development"
 
 
-from gui.graphDrawer import GraphDrawer, LINK_LINE_WIDTH
-from graph import UndirectedGraph
+from dynamicgraphviz.gui import GraphDrawer, LINK_LINE_WIDTH
+from dynamicgraphviz.graph import UndirectedGraph
 from collections import defaultdict
 
 

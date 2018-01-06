@@ -7,15 +7,6 @@ or an arc with a graph to which they do not belong.
 All those exceptions are subclasses of the general class `GraphError`.
 """
 
-__author__ = "Dimitri Watel"
-__copyright__ = "Copyright 2018, dynamicgraphviz"
-__credits__ = ["Dimitri Watel"]
-__license__ = "MIT"
-__version__ = "0.99"
-__maintainer__ = "Dimitri Watel"
-__email__ = "patatemouton@gmail.com"
-__status__ = "Development"
-
 
 class GraphError(Exception):
     """Error raised when working with graphs."""

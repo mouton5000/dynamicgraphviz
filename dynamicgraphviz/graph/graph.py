@@ -5,18 +5,9 @@ Provide useful and simple classes to manage graphs. It contains the three intern
 graph classes of the `undirectedgraph` and `directedgraph` packages.
 """
 
-__author__ = "Dimitri Watel"
-__copyright__ = "Copyright 2018, dynamicgraphviz"
-__credits__ = ["Dimitri Watel"]
-__license__ = "MIT"
-__version__ = "0.99"
-__maintainer__ = "Dimitri Watel"
-__email__ = "patatemouton@gmail.com"
-__status__ = "Development"
-
 
 from pubsub import pub
-from exceptions.graph_errors import *
+from dynamicgraphviz.exceptions.graph_errors import *
 
 
 class _Graph:

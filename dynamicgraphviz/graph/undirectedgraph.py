@@ -8,18 +8,9 @@ is not possible to link them with the graph objects. The graph classes has metho
 of the graphs.
 """
 
-__author__ = "Dimitri Watel"
-__copyright__ = "Copyright 2018, dynamicgraphviz"
-__credits__ = ["Dimitri Watel"]
-__license__ = "MIT"
-__version__ = "0.99"
-__maintainer__ = "Dimitri Watel"
-__email__ = "patatemouton@gmail.com"
-__status__ = "Development"
 
-
-from graph.graph import _Graph, _Node, _Link
-from exceptions.graph_errors import *
+from dynamicgraphviz.graph.graph import _Graph, _Node, _Link
+from dynamicgraphviz.exceptions.graph_errors import *
 
 
 class UndirectedGraph(_Graph):

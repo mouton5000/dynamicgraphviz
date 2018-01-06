@@ -8,8 +8,8 @@ __email__ = "patatemouton@gmail.com"
 __status__ = "Development"
 
 
-from gui.graphDrawer import GraphDrawer
-from graph import DirectedGraph
+from dynamicgraphviz.gui import GraphDrawer
+from dynamicgraphviz.graph import DirectedGraph
 
 
 def dijkstra(g, weights, s, drawer):
