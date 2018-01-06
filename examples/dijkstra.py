@@ -1,15 +1,5 @@
-__author__ = "Dimitri Watel"
-__copyright__ = "Copyright 2018, dynamicgraphviz"
-__credits__ = ["Dimitri Watel"]
-__license__ = "MIT"
-__version__ = "0.99"
-__maintainer__ = "Dimitri Watel"
-__email__ = "patatemouton@gmail.com"
-__status__ = "Development"
-
-
-from dynamicgraphviz.gui import GraphDrawer
-from dynamicgraphviz.graph import DirectedGraph
+from dynamicgraphviz.gui.graphDrawer import GraphDrawer
+from dynamicgraphviz.graph.directedgraph import DirectedGraph
 
 
 def dijkstra(g, weights, s, drawer):
