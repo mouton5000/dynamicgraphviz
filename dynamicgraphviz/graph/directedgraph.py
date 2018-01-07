@@ -16,6 +16,7 @@ from dynamicgraphviz.exceptions.graph_errors import *
 __author__ = "Dimitri Watel"
 __copyright__ = "Copyright 2018, dynamicgraphviz"
 
+
 class DirectedGraph(_Graph):
     """Directed graphs.
 
@@ -102,6 +103,7 @@ class DirectedNode(_Node):
     def __init__(self, g):
         """Build a new node of the directed graph g."""
         super().__init__(g)
+        self.__neighbors = set()
         self.__input_arcs = {}
         self.__output_arcs = {}
 
@@ -117,8 +119,13 @@ class DirectedNode(_Node):
 
     @property
     def neighbors(self):
-        """Return an iterator through the list of input and output neighbor nodes of the node."""
-        return chain(self.input_neighbors, self.output_neighbors)
+        """Return an iterator through the list of input and output neighbor nodes of the node.
+
+        Return an iterator through the list of input and output neighbor nodes of the node. If a node v is an input and
+        an output neighbor of this node, it is count only once. To count it twice, use, for instance,
+        `itertools.chain(self.input_neighbors(), self.output_neighbors())` instead.
+        """
+        return iter(self.__neighbors)
 
     def is_input_neighbor_of(self, v):
         """Return True if this node is an input neighbor of this node (in other words, v is an output neighbor of this
@@ -132,28 +139,74 @@ class DirectedNode(_Node):
 
     def is_neighbor_of(self, v):
         """Return True if this node is an input or an output neighbor of this node and False otherwise."""
-        return self.is_input_neighbor_of(v) or self.is_output_neighbor_of(v)
+        return v in self.__neighbors
 
     def _remove_neighbor(self, v):
         """Remove the node v from the list of neighbors of the node.
 
-        Remove the node v from the list of neighbors of the node.
+        Remove the node v from the list of input and output neighbors of the node.
         If the node v is not a neighbor of the node, an exception is raised.
 
         :param v: the neighbor to be removed
         :raises TypeError: if v is not a node of an directed graph
         :raises NodeError: if v is not a neighbor of the node
         """
+
+        try:
+            self.__neighbors.remove(v)
+            try:
+                self._remove_input_neighbor(v)
+            except NodeError:
+                pass
+            try:
+                self._remove_output_neighbor(v)
+            except NodeError:
+                pass
+        except KeyError:
+            if isinstance(v, DirectedGraph):
+                raise NodeError(self.__graph, self, 'The node ' + str(v) + ' is not a neighbor of this node.')
+            else:
+                raise TypeError()
+
+    def _remove_input_neighbor(self, v):
+        """Remove the node v from the list of input neighbors of the node.
+
+        Remove the node v from the list of input neighbors of the node.
+        If the node v is not an input neighbor of the node, an exception is raised.
+
+        :param v: the input neighbor to be removed
+        :raises TypeError: if v is not a node of an directed graph
+        :raises NodeError: if v is not an input neighbor of the node
+        """
         try:
             del self.__input_arcs[v]
+            if not self.is_input_neighbor_of(v):
+                self.__neighbors.remove(v)
         except KeyError:
-            try:
-                del self.__output_arcs[v]
-            except KeyError:
-                if isinstance(v, DirectedGraph):
-                    raise NodeError(self.__graph, self, 'The node ' + str(v) + ' is not a neighbor of this node.')
-                else:
-                    raise TypeError()
+            if isinstance(v, DirectedGraph):
+                raise NodeError(self.__graph, self, 'The node ' + str(v) + ' is not an input neighbor of this node.')
+            else:
+                raise TypeError()
+
+    def _remove_output_neighbor(self, v):
+        """Remove the node v from the list of output neighbors of the node.
+
+        Remove the node v from the list of output neighbors of the node.
+        If the node v is not an output neighbor of the node, an exception is raised.
+
+        :param v: the output neighbor to be removed
+        :raises TypeError: if v is not a node of an directed graph
+        :raises NodeError: if v is not an output neighbor of the node
+        """
+        try:
+            del self.__output_arcs[v]
+            if not self.is_output_neighbor_of(v):
+                self.__neighbors.remove(v)
+        except KeyError:
+            if isinstance(v, DirectedGraph):
+                raise NodeError(self.__graph, self, 'The node ' + str(v) + ' is not an output neighbor of this node.')
+            else:
+                raise TypeError()
 
     @property
     def input_arcs(self):
@@ -220,8 +273,10 @@ class DirectedNode(_Node):
             u, v = a.extremities
             if u == self:
                 self.__output_arcs[v] = a
+                self.__neighbors.add(v)
             elif v == self:
                 self.__input_arcs[u] = a
+                self.__neighbors.add(u)
             else:
                 if not isinstance(a, Arc):
                     raise TypeError()
@@ -247,19 +302,20 @@ class DirectedNode(_Node):
         """
 
         try:
-            v = a.neighbor(self)
-            if v is not None:
-                self._remove_neighbor(v)
+            u, v = a.extremities
+            if u == self:
+                self._remove_output_neighbor(v)
+            elif v == self:
+                self._remove_input_neighbor(v)
             else:
                 if not isinstance(a, Arc):
                     raise TypeError()
                 else:
                     raise LinkError(self.__graph, a, str(self) + ' is not one of the extremities.')
-        except AttributeError:
-            if not isinstance(a, Arc):
-                raise TypeError()
-            else:
-                raise
+        except NodeError:
+            raise
+        except TypeError:
+            raise
 
 
 class Arc(_Link):
