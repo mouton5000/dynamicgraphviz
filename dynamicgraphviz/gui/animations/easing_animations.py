@@ -11,6 +11,9 @@ import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, GObject
 
+__author__ = "Dimitri Watel"
+__copyright__ = "Copyright 2018, dynamicgraphviz"
+
 _animating = 0
 """The number of current playing animations."""
 

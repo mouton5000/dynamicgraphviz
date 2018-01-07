@@ -9,6 +9,8 @@ graph classes of the `undirectedgraph` and `directedgraph` packages.
 from pubsub import pub
 from dynamicgraphviz.exceptions.graph_errors import *
 
+__author__ = "Dimitri Watel"
+__copyright__ = "Copyright 2018, dynamicgraphviz"
 
 class _Graph:
     """Undirected and directed graphs.

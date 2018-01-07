@@ -13,6 +13,8 @@ from dynamicgraphviz.graph.graph import _Graph, _Node, _Link
 from itertools import chain
 from dynamicgraphviz.exceptions.graph_errors import *
 
+__author__ = "Dimitri Watel"
+__copyright__ = "Copyright 2018, dynamicgraphviz"
 
 class DirectedGraph(_Graph):
     """Directed graphs.

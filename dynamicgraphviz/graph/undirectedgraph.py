@@ -12,6 +12,8 @@ of the graphs.
 from dynamicgraphviz.graph.graph import _Graph, _Node, _Link
 from dynamicgraphviz.exceptions.graph_errors import *
 
+__author__ = "Dimitri Watel"
+__copyright__ = "Copyright 2018, dynamicgraphviz"
 
 class UndirectedGraph(_Graph):
     """Undirected graphs.

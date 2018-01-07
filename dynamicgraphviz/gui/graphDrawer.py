@@ -33,6 +33,9 @@ from dynamicgraphviz.exceptions.graph_errors import *
 from dynamicgraphviz.graph.undirectedgraph import UndirectedNode, Edge
 from dynamicgraphviz.graph.directedgraph import DirectedNode, Arc
 
+__author__ = "Dimitri Watel"
+__copyright__ = "Copyright 2018, dynamicgraphviz"
+
 WIDTH = 1400
 """Width of the shown window."""
 HEIGHT = 800

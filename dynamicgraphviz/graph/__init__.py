@@ -14,4 +14,6 @@ is not possible to link them with the graph objects. The graph classes have meth
 of the graphs.
 """
 
+__author__ = "Dimitri Watel"
+__copyright__ = "Copyright 2018, dynamicgraphviz"
 __all__ = ['directedgraph', 'undirectedgraph']

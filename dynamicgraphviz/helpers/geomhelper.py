@@ -3,6 +3,8 @@
 from euclid3 import Vector2
 import math
 
+__author__ = "Dimitri Watel"
+__copyright__ = "Copyright 2018, dynamicgraphviz"
 
 def rotate(v, alpha):
     """Return a new 2D vector equal to v rotated with the angle alpha."""
