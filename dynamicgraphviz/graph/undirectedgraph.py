@@ -87,9 +87,10 @@ class UndirectedNode(_Node):
     the method `UndirectedGraph.add_node` instead. Otherwise an unexpected behaviour may occurs.
 
     With this class, it is possible to access to all the incident edges and to the corresponding neighbors of the node.
-    - the property `neighbors` and the method `is_neighbor_of` give access to the neighbors
+    - the property `nb_neighbors` and `len(self)` return the number of neighbors.
+    - the property `neighbors` and the method `is_neighbor_of` give access to the neighbors.
     - the property `incident_edges` and the methods `get_incident_edge` and `is_incident_to` give access to the
-    incident_edges
+    incident_edges.
 
     Moreover, a node has a unique index that can be used to easily identify that node and that is used when the node
     is printed with `str`. That index is accessible with the property `index`.
@@ -99,6 +100,15 @@ class UndirectedNode(_Node):
         """Build a new node of the undirected graph g."""
         super().__init__(g)
         self.__edges = {}
+
+    def __len__(self):
+        """Return the number of neighbors of the node."""
+        return self.nb_neighbors
+
+    @property
+    def nb_neighbors(self):
+        """Return the number of neighbors of the node."""
+        return len(self.__edges)
 
     @property
     def neighbors(self):

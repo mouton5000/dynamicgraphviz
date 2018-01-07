@@ -90,8 +90,10 @@ class DirectedNode(_Node):
     the method `DirectedGraph.add_node` instead. Otherwise an unexpected behaviour may occurs.
 
     With this class, it is possible to access to all the incident arcs and to the corresponding neighbors of the node.
+    - the property `nb_neighbors` and `len(self)` return the number of neighbors, the property `nb_input_neighbors` and
+    `nb_output_neighbors` return the number of input and output neighbors.
     - the property `neighbors`, `input_neighbors` and `output_neighbors` and the methods `is_neighbor_of`,
-    `is_input_neighbor_of` and `is_output_neighbor_of` give access to the neighbors
+    `is_input_neighbor_of` and `is_output_neighbor_of` give access to the neighbors.
     - the properties `incident_arcs`, `incident_input_arcs` and `incident_output_arcs` and the methods
     `get_incident_arcs`, `get_input_arc`, `get_output_arc`, `is_incident_to`, `is_input_arc` and `is_output_arc` give
     access to the incident_arcs.
@@ -106,6 +108,29 @@ class DirectedNode(_Node):
         self.__neighbors = set()
         self.__input_arcs = {}
         self.__output_arcs = {}
+
+    def __len__(self):
+        """Return the number of neighbors of the node."""
+        return self.nb_neighbors
+
+    @property
+    def nb_input_neighbors(self):
+        """Return the number of input neighbors of the node."""
+        return len(self.__input_arcs)
+
+    @property
+    def nb_output_neighbors(self):
+        """Return the number of output neighbors of the node."""
+        return len(self.__output_arcs)
+
+    @property
+    def nb_neighbors(self):
+        """Return the number of neighbors of the node.
+
+        Return the number of neighbors of the node. If a node v is an input and an output neighbor of this node,
+        it is count only once. To count it twice, use `self.nb_input_neighbors + self.nb_output_neighbors` instead.
+        """
+        return len(self.__neighbors)
 
     @property
     def input_neighbors(self):
