@@ -184,8 +184,12 @@ class _Graph:
         try:
             self.__links.remove(l)
             u, v = l.extremities
-            u._remove_neighbor(v)
-            v._remove_neighbor(u)
+            if self.directed:
+                u._remove_incident_arc(l)
+                v._remove_incident_arc(l)
+            else:
+                u._remove_incident_edge(l)
+                v._remove_incident_edge(l)
 
             # Publish a message so that any listener is aware that an arc was removed.
             # The draw parameters tells any drawer listener not to update the drawing.
