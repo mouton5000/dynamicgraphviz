@@ -41,6 +41,16 @@ class DirectedGraph(_Graph):
     def __init__(self):
         super().__init__(directed=True)
 
+    def __contains__(self, elem):
+        """Return True if elem is a node or an arc of the graph."""
+
+        if isinstance(elem, DirectedNode):
+            return self._contain_node(elem)
+        elif isinstance(elem, Arc):
+            return self._contain_link(elem)
+        else:
+            return False
+
     def _build_node(self):
         return DirectedNode(self)
 

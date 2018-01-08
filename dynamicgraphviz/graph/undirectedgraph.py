@@ -15,6 +15,7 @@ from dynamicgraphviz.exceptions.graph_errors import *
 __author__ = "Dimitri Watel"
 __copyright__ = "Copyright 2018, dynamicgraphviz"
 
+
 class UndirectedGraph(_Graph):
     """Undirected graphs.
 
@@ -38,6 +39,16 @@ class UndirectedGraph(_Graph):
 
     def __init__(self):
         super().__init__(directed=False)
+
+    def __contains__(self, elem):
+        """Return True if elem is a node or an edge of the graph."""
+
+        if isinstance(elem, UndirectedNode):
+            return self._contain_node(elem)
+        elif isinstance(elem, Edge):
+            return self._contain_link(elem)
+        else:
+            return False
 
     def _build_node(self):
         return UndirectedNode(self)

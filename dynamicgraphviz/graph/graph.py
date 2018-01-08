@@ -12,6 +12,7 @@ from dynamicgraphviz.exceptions.graph_errors import *
 __author__ = "Dimitri Watel"
 __copyright__ = "Copyright 2018, dynamicgraphviz"
 
+
 class _Graph:
     """Undirected and directed graphs.
 
@@ -56,6 +57,12 @@ class _Graph:
         """Return the number of nodes of the graph."""
         return len(self.__nodes)
 
+    def _contain_node(self, node):
+        return node in self.__nodes
+
+    def _contain_link(self, link):
+        return link in self.__links
+
     @property
     def nodes(self):
         """Return an iterator through the list of nodes of the graph. This functions is identical to iter(self). """
@@ -78,10 +85,6 @@ class _Graph:
     def __iter__(self):
         """Return an iterator through the nodes of the graph. This function is identical to `self.nodes`."""
         return self.nodes
-
-    def __contains__(self, node):
-        """Return True if node is a node of the graph."""
-        return node in self.__nodes
 
     def add_node(self):
         """Add a new node to the graph and return it.
