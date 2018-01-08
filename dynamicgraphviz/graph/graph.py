@@ -145,15 +145,15 @@ class _Graph:
         """
         if u not in self:
             if isinstance(u, _Node):
-                raise TypeError()
-            else:
                 raise NodeMembershipError(self, u)
+            else:
+                raise TypeError()
 
         if v not in self:
             if isinstance(v, _Node):
-                raise TypeError()
-            else:
                 raise NodeMembershipError(self, v)
+            else:
+                raise TypeError()
 
         if u == v:
             raise GraphError(self, 'A node cannot be linked to itself.')
