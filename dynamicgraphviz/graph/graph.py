@@ -22,10 +22,12 @@ class _Graph:
     This class should not be instantiated. Use the class UndirectedGraph to build an undirected graph and the
     class DirectedGraph to build a directed graph. Those classes contains one property `nodes` to access to the nodes
     of the graph and two methods to simply edit them: `add_node` and `remove_node`. The class UndirectedGraph contains
-    one property `UndictedGraph.edges` to access to the edges of the graph and two methods to edit the edges:
-    `UndirectedGraph.add_edge` and `UndictedGraph.remove_edge`. Similarly, the class DirectedGraph contains one
-    property `DirectedGraph.arcs` and two methods `DirectedGraph.add_arc` and `DirectedGraph.remove_arc`. Finally,
-    the three classes have the property `directed` to know whether the graph is directed or not.
+    two properties `UndictedGraph.edges` and `UndictedGraph.nb_edges` to access to the edges and the number of edges of
+    the graph and two methods to edit the edges: `UndirectedGraph.add_edge` and `UndictedGraph.remove_edge`. Similarly,
+    the class DirectedGraph contains two properties `DirectedGraph.arcs` and `DirectedGraph.nb_arcs` and two methods
+    `DirectedGraph.add_arc` and `DirectedGraph.remove_arc`. Finally, the three classes have the property `directed` to
+    know whether the graph is directed or not, and the properties `links` and `nb_links` to directly access to the
+    edges/arcs without knowing if the graph is directed.
 
     The graphs are simple :
     - if the graph is undirected, there are no two edges between the same two nodes and there is no loop.
@@ -56,6 +58,11 @@ class _Graph:
     def __len__(self):
         """Return the number of nodes of the graph."""
         return len(self.__nodes)
+
+    @property
+    def nb_links(self):
+        """Return the number of links of the graph."""
+        return len(self.__links)
 
     def _contain_node(self, node):
         return node in self.__nodes

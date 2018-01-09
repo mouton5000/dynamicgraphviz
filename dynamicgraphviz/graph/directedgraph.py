@@ -23,7 +23,11 @@ class DirectedGraph(_Graph):
     This class represents directed graphs (sets of vertices (or nodes) connected by arcs,
     see https://en.wikipedia.org/wiki/Graph_theory for basic definitions). It contains four
     methods to simply edit the graph: `add_node`, `remove_node`, `add_arc` and `remove_arc` and two properties,
-    `nodes`, `arcs` to respectively access to the nodes and the arcs of the graph.
+    `nodes`, `arcs` and `nb_arcs` to respectively access to the nodes, the arcs and the number of arcs of the graph.
+    
+    Finally, this class has the property `directed` which returns True, and the properties `links` and
+    `nb_links` to access to the arcs and number of arcs. Those properties are useful when it is not known
+    whether the graph is directed or not.
 
     The graphs are simple: there are no two arcs with the same input and output nodes and there is no loop. However
     there may be an arc from a node u to a node v and conversely an arc from v to u.
@@ -56,6 +60,10 @@ class DirectedGraph(_Graph):
 
     def _build_link(self, u, v):
         return Arc(u, v), DirectedNode._add_incident_arc
+
+    @property
+    def nb_arcs(self):
+        return super().nb_links
 
     @property
     def arcs(self):

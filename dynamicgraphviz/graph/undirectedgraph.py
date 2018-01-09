@@ -21,8 +21,13 @@ class UndirectedGraph(_Graph):
 
     This class represents undirected graphs (sets of vertices (or nodes) connected by edges,
     see https://en.wikipedia.org/wiki/Graph_theory for basic definitions). It contains four
-    methods to simply edit the graph: `add_node`, `remove_node`, `add_edge` and `remove_edge` and two properties,
-    `nodes` and `edges`, to respectively access to the nodes and the edges of the graph.
+    methods to simply edit the graph: `add_node`, `remove_node`, `add_edge` and `remove_edge` and three properties,
+    `nodes`, `edges` and `nb_edges`, to respectively access to the nodes, the edges and the number of edges of the
+    graph.
+
+    Finally, this class has the property `directed` which returns False, and the properties `links` and
+    `nb_links` to access to the edges and number of edges. Those properties are useful when it is not known
+    whether the graph is directed or not.
 
     The graphs are simple: there are no two edges between the same two nodes and there is no loop.
 
@@ -55,6 +60,10 @@ class UndirectedGraph(_Graph):
 
     def _build_link(self, u, v):
         return Edge(u, v), UndirectedNode._add_incident_edge
+
+    @property
+    def nb_edges(self):
+        return super().nb_links
 
     @property
     def edges(self):
