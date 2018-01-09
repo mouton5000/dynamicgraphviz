@@ -30,7 +30,7 @@ class UndirectedGraph(_Graph):
     - len(g) to get the number of node of g
     - str(g) to get a printable representation of the graph
     - iter(g) to get an iterator over the nodes of g (or 'for node in g:')
-    - 'node in g' to know if a node is in g.
+    - 'elem in g' to know if a node or an edge named elem is in g.
 
     WARNING : The graph should be edited only with the methods `add_node`, `remove_node, `add_edge`, and `remove_edge`
     otherwise an unexpected behaviour may occurs.
