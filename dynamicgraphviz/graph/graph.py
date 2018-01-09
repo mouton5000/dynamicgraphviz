@@ -118,7 +118,7 @@ class _Graph:
         """
         try:
             self.__nodes.remove(v)
-            for arc in list(v.incident_edges_and_arcs):
+            for arc in (list(v.incident_edges) if not self.directed else list(v.incident_arcs)):
                 # Remove the incident edges or arcs of the nodes. Any listener will be aware that those edges/arcs
                 # are removed. If the listener draws the graphs, the False parameter tells it not to immediately update
                 # the drawing, it will be done when the node is removed.
