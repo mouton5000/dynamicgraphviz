@@ -152,7 +152,7 @@ class UndirectedNode(_Node):
             del self.__edges[v]
         except KeyError:
             if isinstance(v, UndirectedNode):
-                raise NodeError(self.__graph, self, 'The node ' + str(v) + ' is not a neighbor of this node.')
+                raise NodeError(self._graph, self, 'The node ' + str(v) + ' is not a neighbor of this node.')
             else:
                 raise TypeError()
 
@@ -177,7 +177,7 @@ class UndirectedNode(_Node):
             return self.__edges[v]
         except KeyError:
             if isinstance(v, UndirectedNode):
-                raise NodeError(self.__graph, self, str(v) + " is not a neighbor of the node.")
+                raise NodeError(self._graph, self, str(v) + " is not a neighbor of the node.")
             else:
                 raise TypeError()
 
@@ -205,7 +205,7 @@ class UndirectedNode(_Node):
                 if not isinstance(e, Edge):
                     raise TypeError()
                 else:
-                    raise LinkError(self.__graph, e, str(self) + ' is not one of the extremities.')
+                    raise LinkError(self._graph, e, str(self) + ' is not one of the extremities.')
         except AttributeError:
             if not isinstance(e, Edge):
                 raise TypeError()
@@ -231,7 +231,7 @@ class UndirectedNode(_Node):
                 if not isinstance(e, Edge):
                     raise TypeError()
                 else:
-                    raise LinkError(self.__graph, e, str(self) + ' is not one of the extremities.')
+                    raise LinkError(self._graph, e, str(self) + ' is not one of the extremities.')
         except AttributeError:
             if not isinstance(e, Edge):
                 raise TypeError()

@@ -241,7 +241,7 @@ class _Node:
 
     def __init__(self, g):
         """Build a new node of the graph g."""
-        self.__graph = g
+        self._graph = g
         self.__index = _Node._index
         _Node._index += 1
 
@@ -275,7 +275,7 @@ class _Link:
         :param u: a node of a graph
         :param v: a node of a same graph
         """
-        self.__graph = g
+        self._graph = g
         self._u = u
         self._v = v
 
@@ -300,7 +300,7 @@ class _Link:
         elif v == self._v:
             return self._u
         if isinstance(v, _Node):
-            raise LinkError(self.__graph, self, str(v) + " is not an extremity of the link.")
+            raise LinkError(self._graph, self, str(v) + " is not an extremity of the link.")
         else:
             raise TypeError()
 

@@ -207,7 +207,7 @@ class DirectedNode(_Node):
                 pass
         except KeyError:
             if isinstance(v, DirectedGraph):
-                raise NodeError(self.__graph, self, 'The node ' + str(v) + ' is not a neighbor of this node.')
+                raise NodeError(self._graph, self, 'The node ' + str(v) + ' is not a neighbor of this node.')
             else:
                 raise TypeError()
 
@@ -227,7 +227,7 @@ class DirectedNode(_Node):
                 self.__neighbors.remove(v)
         except KeyError:
             if isinstance(v, DirectedGraph):
-                raise NodeError(self.__graph, self, 'The node ' + str(v) + ' is not an input neighbor of this node.')
+                raise NodeError(self._graph, self, 'The node ' + str(v) + ' is not an input neighbor of this node.')
             else:
                 raise TypeError()
 
@@ -247,7 +247,7 @@ class DirectedNode(_Node):
                 self.__neighbors.remove(v)
         except KeyError:
             if isinstance(v, DirectedGraph):
-                raise NodeError(self.__graph, self, 'The node ' + str(v) + ' is not an output neighbor of this node.')
+                raise NodeError(self._graph, self, 'The node ' + str(v) + ' is not an output neighbor of this node.')
             else:
                 raise TypeError()
 
@@ -281,7 +281,7 @@ class DirectedNode(_Node):
             return self.__input_arcs[v]
         except KeyError:
             if isinstance(v, DirectedNode):
-                raise NodeError(self.__graph, self, str(v) + " is not a neighbor of the node.")
+                raise NodeError(self._graph, self, str(v) + " is not a neighbor of the node.")
             else:
                 raise TypeError()
 
@@ -300,7 +300,7 @@ class DirectedNode(_Node):
             return self.__output_arcs[v]
         except KeyError:
             if isinstance(v, DirectedNode):
-                raise NodeError(self.__graph, self, str(v) + " is not a neighbor of the node.")
+                raise NodeError(self._graph, self, str(v) + " is not a neighbor of the node.")
             else:
                 raise TypeError()
 
@@ -359,7 +359,7 @@ class DirectedNode(_Node):
                 if not isinstance(a, Arc):
                     raise TypeError()
                 else:
-                    raise LinkError(self.__graph, a, str(self) + ' is not one of the extremities.')
+                    raise LinkError(self._graph, a, str(self) + ' is not one of the extremities.')
         except AttributeError:
             if not isinstance(a, Arc):
                 raise TypeError()
@@ -389,7 +389,7 @@ class DirectedNode(_Node):
                 if not isinstance(a, Arc):
                     raise TypeError()
                 else:
-                    raise LinkError(self.__graph, a, str(self) + ' is not one of the extremities.')
+                    raise LinkError(self._graph, a, str(self) + ' is not one of the extremities.')
         except NodeError:
             raise
         except TypeError:
