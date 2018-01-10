@@ -250,12 +250,6 @@ class _Node:
         """Return the unique index of that node."""
         return self.__index
 
-    def is_incident_to(self, l):
-        """Return True if the node is incident to the link l (an edge if the graph is not directed and an arc
-        otherwise) and False otherwise."""
-        u, v = l.extremities
-        return self == u or self == v
-
     def __str__(self):
         return str(self.__index)
 

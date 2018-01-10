@@ -324,15 +324,15 @@ class DirectedNode(_Node):
 
     def is_input_arc(self, a):
         """Return True if the arc a enters the node and False otherwise."""
-        return self == a.output_node
+        return a in self.__input_arcs.values()
 
     def is_output_arc(self, a):
         """Return True if the arc a goes out of the node and False otherwise."""
-        return self == a.input_node
+        return a in self.__output_arcs.values()
 
     def is_incident_to(self, a):
         """Return True if the node is incident to the arc a and False otherwise."""
-        return super().is_incident_to(a)
+        return self.is_input_arc(a) or self.is_output_arc(a)
 
     def _add_incident_arc(self, a):
         """Add the arc a to the list of input or output arcs of this node (and the corresponding neighbor to the list

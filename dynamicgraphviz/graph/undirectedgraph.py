@@ -183,7 +183,7 @@ class UndirectedNode(_Node):
 
     def is_incident_to(self, e):
         """Return True if the node is incident to the edge e and False otherwise."""
-        return super().is_incident_to(e)
+        return e in self.__edges.values()
 
     def _add_incident_edge(self, e):
         """Add the edge e to the list of incident edges of this node (and the corresponding neighbor to the list
