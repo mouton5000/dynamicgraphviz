@@ -275,12 +275,13 @@ class _Link:
     `neighbor`. Finally use the property `directed` to know whether the link is an edge or an arc.
     """
 
-    def __init__(self, u, v):
+    def __init__(self, g, u, v):
         """Build a new link between the node u and the node v
 
         :param u: a node of a graph
         :param v: a node of a same graph
         """
+        self.__graph = g
         self._u = u
         self._v = v
 
@@ -290,16 +291,24 @@ class _Link:
         return self._u, self._v
 
     def neighbor(self, v):
-        """Return the extremity of the link not equal to v or None if v is not an extremity.
+        """Return the extremity of the link not equal to v.
+
+        Return the extremity of the link not equal to v. The node v should be an extremity of the link otherwise
+        an exception is raised.
 
         :param v: an extremity of the link
-        :return: the extremity not equal to v or None if v is not an extremity.
+        :raise TypeError: if v is not a node
+        :raise LinkError: if the node v is not an extremity of the link
+        :return: the extremity not equal to v.
         """
         if v == self._u:
             return self._v
         elif v == self._v:
             return self._u
-        return None
+        if isinstance(v, _Node):
+            raise LinkError(self.__graph, self, str(v) + " is not an extremity of the link.")
+        else:
+            raise TypeError()
 
     def __str__(self):
         return str(self._u) + '--' + str(self._v)

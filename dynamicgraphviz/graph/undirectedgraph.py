@@ -59,7 +59,7 @@ class UndirectedGraph(_Graph):
         return UndirectedNode(self)
 
     def _build_link(self, u, v):
-        return Edge(u, v), UndirectedNode._add_incident_edge
+        return Edge(self, u, v), UndirectedNode._add_incident_edge
 
     @property
     def nb_edges(self):
@@ -162,8 +162,24 @@ class UndirectedNode(_Node):
         return iter(self.__edges.values())
 
     def get_incident_edge(self, v):
-        """Return the edge between this node and the node v."""
-        return self.__edges[v]
+        """Return the edge between the node and the node v.
+
+        Return the edge between the node and the node v. The node v should be a neighbor of the node, otherwise an
+        exception is raised.
+
+        :param v: a neighbor of the node
+        :raises TypeError: if v is not a node of an undirected graph
+        :raises NodeError: if v is not a neighbor of the node
+        :return: the edge between the node and v
+
+        """
+        try:
+            return self.__edges[v]
+        except KeyError:
+            if isinstance(v, UndirectedNode):
+                raise NodeError(self.__graph, self, str(v) + " is not a neighbor of the node.")
+            else:
+                raise TypeError()
 
     def is_incident_to(self, e):
         """Return True if the node is incident to the edge e and False otherwise."""
@@ -242,10 +258,15 @@ class Edge(_Link):
         return super().extremities
 
     def neighbor(self, v):
-        """Return the extremity of the edge not equal to v or None if v is not an extremity.
+        """Return the extremity of the edge not equal to v.
+
+        Return the extremity of the edge not equal to v. The node v should be an extremity of the edge otherwise
+        an exception is raised.
 
         :param v: an extremity of the edge
-        :return: the extremity not equal to v or None if v is not an extremity.
+        :raise TypeError: if v is not a node
+        :raise LinkError: if the node v is not an extremity of the edge
+        :return: the extremity not equal to v.
         """
         return super().neighbor(v)
 

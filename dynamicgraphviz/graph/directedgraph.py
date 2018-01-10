@@ -59,7 +59,7 @@ class DirectedGraph(_Graph):
         return DirectedNode(self)
 
     def _build_link(self, u, v):
-        return Arc(u, v), DirectedNode._add_incident_arc
+        return Arc(self, u, v), DirectedNode._add_incident_arc
 
     @property
     def nb_arcs(self):
@@ -267,25 +267,60 @@ class DirectedNode(_Node):
         return chain(self.output_arcs, self.input_arcs)
 
     def get_input_arc(self, v):
-        """Return the arc from the node v to this node."""
+        """Return the arc from the node v to this node.
+
+        Return the arc from the node v to this node. The node v should be a neighbor of the node, otherwise an
+        exception is raised.
+
+        :param v: a neighbor of the node
+        :raises TypeError: if v is not a node of a directed graph
+        :raises NodeError: if v is not a neighbor of the node
+        :return: the arc from v to this node
+        """
         try:
             return self.__input_arcs[v]
         except KeyError:
-            return None
+            if isinstance(v, DirectedNode):
+                raise NodeError(self.__graph, self, str(v) + " is not a neighbor of the node.")
+            else:
+                raise TypeError()
 
     def get_output_arc(self, v):
-        """Return the arc from this node to the node v."""
+        """Return the arc from this node to the node v.
+
+        Return the arc from this node to the node v. The node v should be a neighbor of the node, otherwise an
+        exception is raised.
+
+        :param v: a neighbor of the node
+        :raises TypeError: if v is not a node of a directed graph
+        :raises NodeError: if v is not a neighbor of the node
+        :return: the arc from this node to the node v.
+        """
         try:
             return self.__output_arcs[v]
         except KeyError:
-            return None
+            if isinstance(v, DirectedNode):
+                raise NodeError(self.__graph, self, str(v) + " is not a neighbor of the node.")
+            else:
+                raise TypeError()
 
     def get_incident_arc(self, v):
-        """Return the edge between this node and the node v."""
-        a = self.get_input_arc(v)
-        if a is None:
-            a = self.get_output_arc(v)
-        return a
+        """Return the arc between this node and the node v.
+
+        Return the arc between this node and the node v. If there are two arcs, one from v, and one to v, this method
+        return the one from v. The node v should be a neighbor of the node, otherwise an exception is raised.
+
+        :param v: a neighbor of the node
+        :raises TypeError: if v is not a node of a directed graph
+        :raises NodeError: if v is not a neighbor of the node
+        :return: the arc between the node and v
+        """
+        try:
+            return self.get_input_arc(v)
+        except TypeError:
+            raise
+        except NodeError:
+            return self.get_output_arc(v)
 
     def is_input_arc(self, a):
         """Return True if the arc a enters the node and False otherwise."""
@@ -384,10 +419,15 @@ class Arc(_Link):
         return super().extremities
 
     def neighbor(self, v):
-        """Return the extremity of the arc not equal to v or None if v is not an extremity.
+        """Return the extremity of the arc not equal to v.
+
+        Return the extremity of the arc not equal to v. The node v should be an extremity of the arc otherwise
+        an exception is raised.
 
         :param v: an extremity of the arc
-        :return: the extremity not equal to v or None if v is not an extremity.
+        :raise TypeError: if v is not a node
+        :raise LinkError: if the node v is not an extremity of the arc
+        :return: the extremity not equal to v.
         """
         return super().neighbor(v)
 
