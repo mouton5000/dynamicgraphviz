@@ -4,7 +4,6 @@ from dynamicgraphviz.graph.directedgraph import DirectedGraph
 from dynamicgraphviz.graph.undirectedgraph import UndirectedGraph, UndirectedNode, Edge
 from dynamicgraphviz.exceptions.graph_errors import GraphError, NodeMembershipError, LinkError, LinkMembershipError, \
     NodeError
-from pubsub import pub
 
 CONCURRENTTEST = False
 try:
@@ -98,16 +97,15 @@ class TestUndirectedNode(unittest.TestCase):
             self.assertEqual(v.nb_neighbors, 0)
 
     def test_add_edge_add_neighbors(self):
-        couples = [e.extremities for e in self.edges]
 
         for u in self.g:
             for v in self.g:
                 if u == v:
                     continue
-            if (u, v) in couples:
+            if (u, v) in self.couples:
                 self.assertTrue(v.is_neighbor_of(u))
                 self.assertTrue(u.is_neighbor_of(v))
-            elif (v, u) not in couples:
+            elif (v, u) not in self.couples:
                 self.assertFalse(v.is_neighbor_of(u))
                 self.assertFalse(u.is_neighbor_of(v))
 
@@ -307,7 +305,6 @@ class TestUndirectedNode(unittest.TestCase):
     def test_get_incident_edge_raise_NodeError_with_not_neighbor(self):
 
         v1, v2, v3, v4, v5, v6, v7, v8 = self.nodes
-        e1, e2, e3, e4, e5, e6, e7, e8 = self.edges
 
         g2 = UndirectedGraph()
         v = g2.add_node()
@@ -350,6 +347,3 @@ if __name__ == '__main__':
         runner.run(concurrent_suite)
     else:
         unittest.main()
-
-
-
