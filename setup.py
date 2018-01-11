@@ -14,5 +14,5 @@ setup(
     maintainer=dynamicgraphviz.__author__,
     maintainer_email=dynamicgraphviz.__email__,
     description='A dynamic graph drawer with Gtk and Cairo',
-    require=['euclid3', 'pypubsub', 'pycairo', 'pygtk']
+    install_requires=['euclid3', 'pypubsub', 'pycairo']
 )
