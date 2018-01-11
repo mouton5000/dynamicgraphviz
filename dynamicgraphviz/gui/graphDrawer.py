@@ -161,9 +161,10 @@ class GraphDrawer(Gtk.Window):
         self.set_position(Gtk.WindowPosition.CENTER)
         self.show_all()
         self.set_keep_above(True)
+        self.__exited = False
+        self.__paused = None
 
         self.redraw()
-        self.__paused = None
 
     def __nextcoords(self):
         """Compute the next place where a node should be drawn when added to the graph."""
@@ -190,6 +191,8 @@ class GraphDrawer(Gtk.Window):
     def __init_ui(self):
         """Init the graphical interface of the window, add a drawing area, a status bar and set the events."""
         self.set_title('Graph drawer')
+
+        self.connect('delete_event', self.press_on_exit)
 
         self.__drawingarea = Gtk.DrawingArea()
         self.__drawingarea.set_size_request(WIDTH, HEIGHT)
@@ -638,9 +641,11 @@ class GraphDrawer(Gtk.Window):
     def redraw(self):
         """Redraw the drawing area of the window. Use this method to draw all the previously updates (color, line width,
         move, ...)"""
+        if self.__exited:
+            return
         self.__drawingarea.queue_draw()
         self.__drawingarea.get_properties('window')[0].process_updates(True)
-        while Gtk.events_pending() or not self.is_active():
+        while Gtk.events_pending() or not self.is_active() and Gtk.main_level() != 0:
             Gtk.main_iteration()
 
     def __draw_graph(self, widget, cr):
@@ -672,6 +677,8 @@ class GraphDrawer(Gtk.Window):
         drawing area by calling the `redraw` method. Thus any previous change on the graph will appear if that method
         is called.
         """
+        if self.__exited:
+            return
         if self.__paused is None:
             self.__paused = self.__add_statusbar_message('paused', 'Paused, click to unlock.')
             self.redraw()
@@ -680,6 +687,8 @@ class GraphDrawer(Gtk.Window):
     def on_button_press(self, widget, event):
         """Called when the user click on the window. Used jointly with the `pause` method to pause and unpause the
         execution of the code."""
+        if self.__exited:
+            return
         if self.__paused is not None and Gtk.main_level() != 0:
             self.__statusbar.pop(self.__paused)
             self.__paused = None
@@ -691,6 +700,13 @@ class GraphDrawer(Gtk.Window):
         context_id = self.__statusbar.get_context_id(context_desc)
         self.__statusbar.push(context_id, context_msg)
         return context_id
+
+    def press_on_exit(self, widget, event):
+        """Reaction to the event of clicking on the exit button of the window."""
+        self.__exited = True
+        self.destroy()
+        for _ in range(Gtk.main_level()):
+            Gtk.main_quit()
 
 
 class _NodeItem:
