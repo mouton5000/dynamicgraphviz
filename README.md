@@ -28,7 +28,7 @@ To use it, you need the following open source libraries :
 - **euclid3** 0.0.1 (https://github.com/euclid3/euclid3) (by Copyright (c) 2006 Alex Holkner)
 - **Pygobject** (Gtk for python3) 3.26.1 (http://pygobject.readthedocs.io/en/latest/index.html)
 
-This module can simply be installed with pip, however only pypubsub, pycairo and euclid3 are automatically installed using pip. Pygobject is **not** automatically installed. Please visit http://pygobject.readthedocs.io/en/latest/getting_started.html to install PyGobject. 
+This module can simply be installed with pip, however only pypubsub, pycairo and euclid3 are automatically installed using pip. Pygobject and Cairo are **not** automatically installed. Please visit http://pygobject.readthedocs.io/en/latest/getting_started.html to install PyGobject and https://cairographics.org/download/ to install Cairo. 
 
 Then simply run the following command:
 
