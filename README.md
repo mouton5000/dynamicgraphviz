@@ -18,7 +18,7 @@ If you purpose is producing a tool that needs to display graphs as fast as possi
 
 With this module, you can **try graph algorithms** and **see what happens in real time**. The main purpose of this project is just a tool to debug and understand in real time what a graph algorithm does with the graph. It is just an advanced substitute to `print`. In addition, the module is light and should be easy to install.
 
-You do not see how does the Dijkstra algorithm works on a directed graph? You do not see how this dual ascent approximation algorithm build the solution of your algorithm? You like graphs (and python) and want to try anything related with graphs. Try **dynamicgraphviz**.
+You do not see how does the Dijkstra algorithm work on a directed graph? You do not see how this dual ascent approximation algorithm builds the solution of your algorithm? You like graphs (and python) and want to try anything related with graphs. Try **dynamicgraphviz**.
 
 ## Installation
 
