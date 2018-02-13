@@ -198,8 +198,11 @@ class GraphDrawer(Gtk.Window):
         self.__drawingarea.set_size_request(WIDTH, HEIGHT)
         self.__drawingarea.connect('draw', self.__draw_graph)
 
+        self.__drawingarea.set_can_focus(True)
+
         self.__drawingarea.set_events(Gdk.EventMask.BUTTON_PRESS_MASK)
         self.__drawingarea.connect('button_press_event', self.on_button_press)
+        self.__drawingarea.connect('key_press_event', self.on_key_press)
 
         self.__statusbar = Gtk.Statusbar()
 
@@ -688,6 +691,20 @@ class GraphDrawer(Gtk.Window):
         """Called when the user click on the window. Used jointly with the `pause` method to pause and unpause the
         execution of the code."""
         if self.__exited:
+            return
+        if self.__paused is not None and Gtk.main_level() != 0:
+            self.__statusbar.pop(self.__paused)
+            self.__paused = None
+            self.redraw()
+            Gtk.main_quit()
+
+    def on_key_press(self, widget, event):
+        """Called when the user press a key. Used to exit the window with any key or jointly with the `pause` method to
+        unpause the window with any key."""
+        if self.__exited:
+            return
+        if event.keyval == Gdk.KEY_Escape:
+            self.emit("delete_event", Gdk.Event())
             return
         if self.__paused is not None and Gtk.main_level() != 0:
             self.__statusbar.pop(self.__paused)
