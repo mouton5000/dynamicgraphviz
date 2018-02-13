@@ -153,6 +153,8 @@ class GraphDrawer(Gtk.Window):
         self.__current_angle = 2 * math.pi
         self.__delta_angle = 0
 
+        self.__dragged_node = None
+
         for node in self.__graph.nodes:
             self.__add_node(node)
         for arc in self.__graph.links:
@@ -200,8 +202,14 @@ class GraphDrawer(Gtk.Window):
 
         self.__drawingarea.set_can_focus(True)
 
-        self.__drawingarea.set_events(Gdk.EventMask.BUTTON_PRESS_MASK)
+        self.__drawingarea.set_events(
+            Gdk.EventMask.BUTTON_PRESS_MASK |
+            Gdk.EventMask.BUTTON_RELEASE_MASK |
+            Gdk.EventMask.POINTER_MOTION_MASK
+        )
         self.__drawingarea.connect('button_press_event', self.on_button_press)
+        self.__drawingarea.connect('button_release_event', self.on_button_release)
+        self.__drawingarea.connect('motion_notify_event', self.on_mouse_move)
         self.__drawingarea.connect('key_press_event', self.on_key_press)
 
         self.__statusbar = Gtk.Statusbar()
@@ -673,6 +681,18 @@ class GraphDrawer(Gtk.Window):
         """Draw the given edge or arc on the drawing area if that link belongs to the graph."""
         self.__arcitems[arc]._draw(cr)
 
+    def __is_inside_node(self, v, x, y):
+        """Return True if the coordinates (x, y) is inside the node v considering its current position and its
+        current radius."""
+        try:
+            u = self.__nodeitems[v]
+            return (u.p.x - x)**2 + (u.p.y - y)**2 <= u.radius**2
+        except KeyError:
+            if isinstance(v, UndirectedNode) or isinstance(v, DirectedNode):
+                raise NodeMembershipError(self.__graph, v)
+            else:
+                raise TypeError()
+
     def pause(self):
         """Pause the execution of the code until the used click on the window.
 
@@ -683,25 +703,52 @@ class GraphDrawer(Gtk.Window):
         if self.__exited:
             return
         if self.__paused is None:
-            self.__paused = self.__add_statusbar_message('paused', 'Paused, click to unlock.')
+            self.__paused = \
+                self.__add_statusbar_message('paused',
+                                             'Paused! ' +
+                                             'Press ESC to exit. ' +
+                                             'Move the nodes by "dragNdropping" with Shift + C  lick. ' +
+                                             'Click anywhere or press any other key to unpause.')
             self.redraw()
             Gtk.main()
 
     def on_button_press(self, widget, event):
-        """Called when the user click on the window. Used jointly with the `pause` method to pause and unpause the
-        execution of the code."""
+        """Called when the user click on the window. Used to move nodes if the user clicks on a node. Used jointly with
+        the `pause` method to pause and unpause the execution of the code if the user click anywhere else."""
         if self.__exited:
             return
         if self.__paused is not None and Gtk.main_level() != 0:
-            self.__statusbar.pop(self.__paused)
-            self.__paused = None
-            self.redraw()
-            Gtk.main_quit()
+            if event.state & Gdk.ModifierType.SHIFT_MASK != 0:
+                for node in self.__graph.nodes:
+                    if self.__is_inside_node(node, event.x, event.y):
+                        self.__dragged_node = node
+                        break
+            else:
+                self.__statusbar.pop(self.__paused)
+                self.__paused = None
+                self.redraw()
+                Gtk.main_quit()
+
+    def on_mouse_move(self, widget, event):
+        """Called when the used move the mouse on the window. Used to drag nodes."""
+        if self.__exited:
+            return
+        if self.__dragged_node is None:
+            return
+        if event.state & Gdk.ModifierType.SHIFT_MASK == 0:
+            self.__dragged_node = None
+            return
+        self.move_node(self.__dragged_node, event.x, event.y, draw=True)
+
+    def on_button_release(self, widget, event):
+        self.__dragged_node = None
 
     def on_key_press(self, widget, event):
         """Called when the user press a key. Used to exit the window with any key or jointly with the `pause` method to
         unpause the window with any key."""
         if self.__exited:
+            return
+        if event.keyval == Gdk.KEY_Shift_L or event.keyval == Gdk.KEY_Shift_R:
             return
         if event.keyval == Gdk.KEY_Escape:
             self.emit("delete_event", Gdk.Event())
