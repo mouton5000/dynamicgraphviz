@@ -26,8 +26,8 @@ import math
 import cairo
 from pubsub import pub
 from euclid3 import Point2, Vector2
-from dynamicgraphviz.helpers.geomhelper import rotate
-from dynamicgraphviz.helpers.shortestpaths import breadth_first_search_distances
+from dynamicgraphviz.helpers.geomhelper import rotate, intersect
+from dynamicgraphviz.helpers.components import connected_components, breadth_first_search
 from dynamicgraphviz.gui.animations.easing_animations import get_nb_animating_with_easing, animate_with_easing, sininout
 from copy import copy
 from dynamicgraphviz.exceptions.graph_errors import *
@@ -368,6 +368,9 @@ class GraphDrawer(Gtk.Window):
         :param doanimate: if True, animate the moving.
         """
 
+        if len(self.__graph) == 0:
+            return
+
         positions = self._place_nodes_kamada_kawai_algorithm()
         if doanimate:
             for u in self.__graph.nodes:
@@ -382,109 +385,208 @@ class GraphDrawer(Gtk.Window):
 
     def _place_nodes_kamada_kawai_algorithm(self):
 
+        # Init the shortest path distances
         dists = {}
         for v in self.__graph:
-            dists[v] = breadth_first_search_distances(self.__graph, v)
+            dists[v] = breadth_first_search(self.__graph, v)
 
-
+        # Init the Kamada-Kawai parameters
         l0 = NODE_RADIUS * 8
-        l = l0 / max(dists[u][v] for u in self.__graph for v in self.__graph)
+        l = l0 / max(dists[u][v] for u in self.__graph for v in self.__graph if v in dists[u])
         k = 1
 
         def lij(u, v):
             return l * dists[u][v]
 
         def kij(u, v):
-            return k / dists[u][v]**2
+            return k / dists[u][v] ** 2
 
-        epsilon = 0.01
+        epsilon = 0.1
 
+        # Init the positions
         positions = {}
         for u in self.__graph:
             positions[u] = copy(self.__nodeitems[u].p)
 
-        def energy_derivative_wrt_x(u):
-            posu = positions[u]
+        def place_component(comp):
+            """ Use the Kamada-Kawai algorithm to place the nodes of a connected component. """
 
-            def part(v):
-                posv = positions[v]
-                sqt = math.sqrt((posu.x - posv.x) ** 2 + (posu.y - posv.y) ** 2)
-                return kij(u, v) * ((posu.x - posv.x) - lij(u, v) * (posu.x - posv.x) / sqt)
+            def energy_derivative_wrt_x(u):
+                """ Derivative of the energy function E with respect to x(u). """
+                posu = positions[u]
 
-            return sum(part(v) for v in self.__graph if v != u)
+                def part(v):
+                    posv = positions[v]
+                    sqt = math.sqrt((posu.x - posv.x) ** 2 + (posu.y - posv.y) ** 2)
+                    return kij(u, v) * ((posu.x - posv.x) - lij(u, v) * (posu.x - posv.x) / sqt)
 
-        def energy_derivative_wrt_y(u):
-            posu = positions[u]
+                return sum(part(v) for v in comp if v != u)
 
-            def part(v):
-                posv = positions[v]
-                sqt = math.sqrt((posu.x - posv.x) ** 2 + (posu.y - posv.y) ** 2)
-                return kij(u, v) * ((posu.y - posv.y) - lij(u, v) * (posu.y - posv.y) / sqt)
+            def energy_derivative_wrt_y(u):
+                """ Derivative of the energy function E with respect to y(u). """
+                posu = positions[u]
 
-            return sum(part(v) for v in self.__graph if v != u)
+                def part(v):
+                    posv = positions[v]
+                    sqt = math.sqrt((posu.x - posv.x) ** 2 + (posu.y - posv.y) ** 2)
+                    return kij(u, v) * ((posu.y - posv.y) - lij(u, v) * (posu.y - posv.y) / sqt)
 
-        def energy_second_derivative_wrt_x2(u):
-            posu = positions[u]
+                return sum(part(v) for v in comp if v != u)
 
-            def part(v):
-                posv = positions[v]
-                sqt = math.sqrt((posu.x - posv.x) ** 2 + (posu.y - posv.y) ** 2)
-                return kij(u, v) * (1 - lij(u, v) * (1 / sqt - (posu.x - posv.x)**2 * 1 / sqt**3))
+            def energy_second_derivative_wrt_x2(u):
+                """ Second derivative of the energy function E with respect to x(u). """
+                posu = positions[u]
 
-            return sum(part(v) for v in self.__graph if v != u)
+                def part(v):
+                    posv = positions[v]
+                    sqt = math.sqrt((posu.x - posv.x) ** 2 + (posu.y - posv.y) ** 2)
+                    return kij(u, v) * (1 - lij(u, v) * (1 / sqt - (posu.x - posv.x)**2 * 1 / sqt**3))
 
-        def energy_second_derivative_wrt_xy(u):
-            posu = positions[u]
+                return sum(part(v) for v in comp if v != u)
 
-            def part(v):
-                posv = positions[v]
-                sqt = math.sqrt((posu.x - posv.x) ** 2 + (posu.y - posv.y) ** 2)
-                return kij(u, v) * (lij(u, v) * (posu.x - posv.x) * (posu.y - posv.y) * 1 / sqt**3)
+            def energy_second_derivative_wrt_xy(u):
+                """ Second derivative of the energy function E with respect to x(u) and y(u). """
+                posu = positions[u]
 
-            return sum(part(v) for v in self.__graph if v != u)
+                def part(v):
+                    posv = positions[v]
+                    sqt = math.sqrt((posu.x - posv.x) ** 2 + (posu.y - posv.y) ** 2)
+                    return kij(u, v) * (lij(u, v) * (posu.x - posv.x) * (posu.y - posv.y) * 1 / sqt**3)
 
-        def energy_second_derivative_wrt_y2(u):
-            posu = positions[u]
+                return sum(part(v) for v in comp if v != u)
 
-            def part(v):
-                posv = positions[v]
-                sqt = math.sqrt((posu.x - posv.x) ** 2 + (posu.y - posv.y) ** 2)
-                return kij(u, v) * (1 - lij(u, v) * (1 / sqt - (posu.y - posv.y) ** 2 * 1 / sqt ** 3))
+            def energy_second_derivative_wrt_y2(u):
+                """ Second derivative of the energy function E with respect to y(u). """
+                posu = positions[u]
 
-            return sum(part(v) for v in self.__graph if v != u)
+                def part(v):
+                    posv = positions[v]
+                    sqt = math.sqrt((posu.x - posv.x) ** 2 + (posu.y - posv.y) ** 2)
+                    return kij(u, v) * (1 - lij(u, v) * (1 / sqt - (posu.y - posv.y) ** 2 * 1 / sqt ** 3))
 
-        def delta(u):
-            return math.sqrt((energy_derivative_wrt_x(u)) ** 2 + (energy_derivative_wrt_y(u)) ** 2)
+                return sum(part(v) for v in comp if v != u)
 
-        def solve(u):
-            a11 = energy_second_derivative_wrt_x2(u)
-            a21 = a12 = energy_second_derivative_wrt_xy(u)
-            a22 = energy_second_derivative_wrt_y2(u)
+            def delta(u):
+                """ Delta variable of the algorithm, norm of the gradient of the energy fonction with respect to
+                 the position (x(u), y(u))"""
+                return math.sqrt((energy_derivative_wrt_x(u)) ** 2 + (energy_derivative_wrt_y(u)) ** 2)
 
-            b1 = -1 * energy_derivative_wrt_x(u)
-            b2 = -1 * energy_derivative_wrt_y(u)
+            def solve(u):
+                """
+                Solve the two variables system of the algorithm determining in which direction a single node should
+                be moved to decrease the energy of the system, assuming the ot.
+                """
+                a11 = energy_second_derivative_wrt_x2(u)
+                a21 = a12 = energy_second_derivative_wrt_xy(u)
+                a22 = energy_second_derivative_wrt_y2(u)
 
-            det = a11 * a22 - a21 * a12
+                b1 = -1 * energy_derivative_wrt_x(u)
+                b2 = -1 * energy_derivative_wrt_y(u)
 
-            h11 = a22 / det
-            h12 = -1 * a21 / det
-            h21 = -1 * a12 / det
-            h22 = a11 / det
+                det = a11 * a22 - a21 * a12
 
-            return h11 * b1 + h12 * b2, h21 * b1 + h22 * b2
+                h11 = a22 / det
+                h12 = -1 * a21 / det
+                h21 = -1 * a12 / det
+                h22 = a11 / det
 
-        u, dlt = max(((u, delta(u)) for u in self.__graph), key=lambda x: x[1])
-        while dlt > epsilon:
+                return h11 * b1 + h12 * b2, h21 * b1 + h22 * b2
 
+            # Main loop of the algorithm
+            # Choose a node maximizing the gradient of the energy with respect to its position
+            # Move it to a position where the energy is minimum (assuming the other nodes are not moving)
+            # Start again until the maximum gradient is under an epsilon constant.
+            u, dlt = max(((u, delta(u)) for u in comp), key=lambda x: x[1])
             while dlt > epsilon:
-                dx, dy = solve(u)
-                posi = positions[u]
-                posi.x += dx
-                posi.y += dy
+                print(u, dlt)
 
-                dlt = delta(u)
+                while dlt > epsilon:
+                    dx, dy = solve(u)
+                    posi = positions[u]
+                    posi.x += dx
+                    posi.y += dy
 
-            u, dlt = max(((u, delta(u)) for u in self.__graph), key=lambda x: x[1])
+                    dlt = delta(u)
+
+                u, dlt = max(((u, delta(u)) for u in comp), key=lambda x: x[1])
+
+        # Place all the connected components independantly
+        components = connected_components(self.__graph)
+        for comp in components:
+            place_component(comp)
+
+        #
+        # Place the components : place disjoint rectangles on the image so that each component is in one rectangle
+        #
+
+        # Sort the components by size
+        components.sort(key=len)
+
+        # Ratio between current height over width of each component
+        minsx = {comp: min(positions[u].x for u in comp) for comp in components}
+        maxsx = {comp: max(positions[u].x for u in comp) for comp in components}
+        minsy = {comp: min(positions[u].y for u in comp) for comp in components}
+        maxsy = {comp: max(positions[u].y for u in comp) for comp in components}
+        ratios = {comp: max(maxsy[comp] - minsy[comp], 4 * NODE_RADIUS) / max(maxsx[comp] - minsx[comp],
+                                                                              4 * NODE_RADIUS) for comp in components}
+
+
+        # Rectangles of each component
+        rm1 = ratios[components[-1]]
+        rectm1 = (0, 0, WIDTH, WIDTH * rm1) if rm1 <= 1 else (0, 0, HEIGHT / rm1, HEIGHT)
+        rectangles = {components[-1]: rectm1}
+        area_size_ratio = rectm1[2] * rectm1[3] / len(components[-1])
+
+        wmax = rectm1[2]
+        hmax = rectm1[3]
+
+        for i, comp in enumerate(reversed(components[:-1])):
+            index = len(components) - 2 - i
+
+            r1 = ratios[comp]
+            w1 = math.sqrt(area_size_ratio * len(comp) / r1)
+            h1 = w1 * r1
+
+            candidates = []
+            for comp2 in components[index + 1:]:
+                x2, y2, w2, h2 = rectangles[comp2]
+                candidates.append((x2 + w2, y2))
+                candidates.append((x2, y2 + h2))
+                candidates.append((x2 + w2, y2 + h2))
+
+            def score(x1, y1):
+
+                for comp2 in components[index + 1:]:
+                    r2 = rectangles[comp2]
+                    if intersect((x1, y1, w1, h1), r2):
+                        return None
+
+                return max(wmax, x1 + w1, hmax, y1 + h1)
+
+            scores = list((candidate, score(*candidate)) for candidate in candidates)
+            x1, y1 = min((scrs for scrs in scores if scrs[1] is not None), key=lambda x: x[1])[0]
+            rectangles[comp] = (x1, y1, w1, h1)
+
+        for comp in components:
+            x, y, w, h = rectangles[comp]
+
+            minx = minsx[comp]
+            maxx = maxsx[comp]
+            miny = minsy[comp]
+            maxy = maxsy[comp]
+
+            for u in comp:
+                if maxx != minx:
+                    positions[u].x = x + 2 * NODE_RADIUS + (w - 4 * NODE_RADIUS) * (positions[u].x - minx) / (
+                    maxx - minx)
+                else:
+                    positions[u].x = x + w // 2
+
+                if maxy != miny:
+                    positions[u].y = y + 2 * NODE_RADIUS + (h - 4 * NODE_RADIUS) * (positions[u].y - miny) / (
+                    maxy - miny)
+                else:
+                    positions[u].y = y + h // 2
 
         minx = min(positions[u].x for u in self.__graph)
         miny = min(positions[u].y for u in self.__graph)

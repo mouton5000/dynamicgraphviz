@@ -1,10 +1,28 @@
-""" Provide useful algorithms to compute shortest paths in unweighted graph (breadth first search) """
+""" Provide useful algorithms to compute and visit connected components """
 
 __author__ = "Dimitri Watel"
 __copyright__ = "Copyright 2018, dynamicgraphviz"
 
+def connected_components(g):
 
-def breadth_first_search_distances(g, v):
+    if len(g) == 0:
+        return []
+
+    visited = set()
+    comps = []
+    while len(visited) != len(g):
+        for u in g:
+            if u not in visited:
+                break
+
+        dists = breadth_first_search(g, u)
+        comp = [v for v in g if v in dists]
+        visited.update(comp)
+        comps.append(tuple(comp))
+    return comps
+
+
+def breadth_first_search(g, v):
     """
     Return, for each node u, the breadth first search distance from v to u in the graph g.
 
