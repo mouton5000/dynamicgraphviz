@@ -27,6 +27,7 @@ import cairo
 from pubsub import pub
 from euclid3 import Point2, Vector2
 from dynamicgraphviz.helpers.geomhelper import rotate
+from dynamicgraphviz.helpers.shortestpaths import breadth_first_search_distances
 from dynamicgraphviz.gui.animations.easing_animations import get_nb_animating_with_easing, animate_with_easing, sininout
 from copy import copy
 from dynamicgraphviz.exceptions.graph_errors import *
@@ -366,6 +367,154 @@ class GraphDrawer(Gtk.Window):
 
         :param doanimate: if True, animate the moving.
         """
+
+        positions = self._place_nodes_kamada_kawai_algorithm()
+        if doanimate:
+            for u in self.__graph.nodes:
+                posu = positions[u]
+                self.move_node(u, posu.x, posu.y, doanimate=True)
+            self.animate()
+        else:
+            for u in self.__graph.nodes:
+                posu = positions[u]
+                self.move_node(u, posu.x, posu.y)
+            self.redraw()
+
+    def _place_nodes_kamada_kawai_algorithm(self):
+
+        dists = {}
+        for v in self.__graph:
+            dists[v] = breadth_first_search_distances(self.__graph, v)
+
+
+        l0 = NODE_RADIUS * 8
+        l = l0 / max(dists[u][v] for u in self.__graph for v in self.__graph)
+        k = 1
+
+        def lij(u, v):
+            return l * dists[u][v]
+
+        def kij(u, v):
+            return k / dists[u][v]**2
+
+        epsilon = 0.01
+
+        positions = {}
+        for u in self.__graph:
+            positions[u] = copy(self.__nodeitems[u].p)
+
+        def energy_derivative_wrt_x(u):
+            posu = positions[u]
+
+            def part(v):
+                posv = positions[v]
+                sqt = math.sqrt((posu.x - posv.x) ** 2 + (posu.y - posv.y) ** 2)
+                return kij(u, v) * ((posu.x - posv.x) - lij(u, v) * (posu.x - posv.x) / sqt)
+
+            return sum(part(v) for v in self.__graph if v != u)
+
+        def energy_derivative_wrt_y(u):
+            posu = positions[u]
+
+            def part(v):
+                posv = positions[v]
+                sqt = math.sqrt((posu.x - posv.x) ** 2 + (posu.y - posv.y) ** 2)
+                return kij(u, v) * ((posu.y - posv.y) - lij(u, v) * (posu.y - posv.y) / sqt)
+
+            return sum(part(v) for v in self.__graph if v != u)
+
+        def energy_second_derivative_wrt_x2(u):
+            posu = positions[u]
+
+            def part(v):
+                posv = positions[v]
+                sqt = math.sqrt((posu.x - posv.x) ** 2 + (posu.y - posv.y) ** 2)
+                return kij(u, v) * (1 - lij(u, v) * (1 / sqt - (posu.x - posv.x)**2 * 1 / sqt**3))
+
+            return sum(part(v) for v in self.__graph if v != u)
+
+        def energy_second_derivative_wrt_xy(u):
+            posu = positions[u]
+
+            def part(v):
+                posv = positions[v]
+                sqt = math.sqrt((posu.x - posv.x) ** 2 + (posu.y - posv.y) ** 2)
+                return kij(u, v) * (lij(u, v) * (posu.x - posv.x) * (posu.y - posv.y) * 1 / sqt**3)
+
+            return sum(part(v) for v in self.__graph if v != u)
+
+        def energy_second_derivative_wrt_y2(u):
+            posu = positions[u]
+
+            def part(v):
+                posv = positions[v]
+                sqt = math.sqrt((posu.x - posv.x) ** 2 + (posu.y - posv.y) ** 2)
+                return kij(u, v) * (1 - lij(u, v) * (1 / sqt - (posu.y - posv.y) ** 2 * 1 / sqt ** 3))
+
+            return sum(part(v) for v in self.__graph if v != u)
+
+        def delta(u):
+            return math.sqrt((energy_derivative_wrt_x(u)) ** 2 + (energy_derivative_wrt_y(u)) ** 2)
+
+        def solve(u):
+            a11 = energy_second_derivative_wrt_x2(u)
+            a21 = a12 = energy_second_derivative_wrt_xy(u)
+            a22 = energy_second_derivative_wrt_y2(u)
+
+            b1 = -1 * energy_derivative_wrt_x(u)
+            b2 = -1 * energy_derivative_wrt_y(u)
+
+            det = a11 * a22 - a21 * a12
+
+            h11 = a22 / det
+            h12 = -1 * a21 / det
+            h21 = -1 * a12 / det
+            h22 = a11 / det
+
+            return h11 * b1 + h12 * b2, h21 * b1 + h22 * b2
+
+        u, dlt = max(((u, delta(u)) for u in self.__graph), key=lambda x: x[1])
+        while dlt > epsilon:
+
+            while dlt > epsilon:
+                dx, dy = solve(u)
+                posi = positions[u]
+                posi.x += dx
+                posi.y += dy
+
+                dlt = delta(u)
+
+            u, dlt = max(((u, delta(u)) for u in self.__graph), key=lambda x: x[1])
+
+        minx = min(positions[u].x for u in self.__graph)
+        miny = min(positions[u].y for u in self.__graph)
+        maxx = max(positions[u].x for u in self.__graph)
+        maxy = max(positions[u].y for u in self.__graph)
+
+        for u in self.__graph:
+            if maxx != minx:
+                positions[u].x = 2 * NODE_RADIUS + (WIDTH - 4 * NODE_RADIUS) * (positions[u].x - minx)/ (maxx - minx)
+            else:
+                positions[u].x = WIDTH // 2
+
+            if maxy != miny:
+                positions[u].y = 2 * NODE_RADIUS + (HEIGHT - 4 * NODE_RADIUS) * (positions[u].y - miny) / (maxy - miny)
+            else:
+                positions[u].y = HEIGHT // 2
+
+        return positions
+
+    def _place_nodes_fruchterman_reingold_algorithm(self):
+        """Automatically replace all the nodes using a force directed graph drawing algorithm.
+
+        Automatically replace all the nodes using an algorithm adapted from the force directed graph drawing algorithm
+        given at https://cs.brown.edu/~rt/gdhandbook/chapters/force-directed.pdf at page number 387 (5th page of the
+        pdf). The temperature starts at 50 and are multiplied by 0.99 at each iteration. The number of iterations is 500
+        times the number of nodes. Those values are purely empirical.
+        A repulsion force from the bounds is added :
+        for each node at position (x, y), there are 4 repulsions from (x, 0), (x, HEIGHT), (0, y) and (WIDTH, y),
+        this forces the nodes to stay away from the boundaries.
+        """
         forces = {}
         positions = {}
         temp = 50
@@ -419,17 +568,7 @@ class GraphDrawer(Gtk.Window):
                 force.y = 0
 
             temp *= 0.99
-
-        if doanimate:
-            for u in self.__graph.nodes:
-                posu = positions[u]
-                self.move_node(u, posu.x, posu.y, doanimate=True)
-            self.animate()
-        else:
-            for u in self.__graph.nodes:
-                posu = positions[u]
-                self.move_node(u, posu.x, posu.y)
-            self.redraw()
+        return positions
 
     def set_color(self, elem, color, draw=False):
         """Change the color of the element elem and update the drawing if draw is true.
