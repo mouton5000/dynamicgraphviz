@@ -117,7 +117,7 @@ class GraphDrawer(Gtk.Window):
     - `move_node` and `animate`: animate the moving of a node;
     - `place_nodes`: automatically place the nodes on the window using a force-directed graph drawing.
 
-    The user is higly encouraged to move the nodes of the graph manually or to use the method `place_nodes` as the
+    The user is highly encouraged to move the nodes of the graph manually or to use the method `place_nodes` as the
     default positions are not really nice.
 
     Except `place_nodes` and `animate`, every method has a keyword argument named 'draw' that can be used to tell the
@@ -167,7 +167,7 @@ class GraphDrawer(Gtk.Window):
 
         self.redraw()
 
-    def __nextcoords(self):
+    def __next_coords(self):
         """Compute the next place where a node should be drawn when added to the graph."""
         self.__current_angle += self.__delta_angle
         if self.__current_angle >= 2 * math.pi:
@@ -187,7 +187,7 @@ class GraphDrawer(Gtk.Window):
             self.__current_angle = 2 * math.pi
             self.__delta_angle = 0
         elif self.__current_y > HEIGHT or self.__current_y < 0 or self.__current_x > WIDTH or self.__current_x < 0:
-            self.__nextcoords()
+            self.__next_coords()
 
     def __init_ui(self):
         """Init the graphical interface of the window, add a drawing area, a status bar and set the events."""
@@ -231,7 +231,7 @@ class GraphDrawer(Gtk.Window):
         to the graph."""
         try:
             item = _NodeItem(self.__current_x, self.__current_y)
-            self.__nextcoords()
+            self.__next_coords()
             item.label = str(node.index)
             self.__nodeitems[node] = item
             if draw:
@@ -946,7 +946,7 @@ class GraphDrawer(Gtk.Window):
                 self.__add_statusbar_message('paused',
                                              'Paused! ' +
                                              'Press ESC to exit. ' +
-                                             'Move the nodes by "dragNdropping" with Shift + C  lick. ' +
+                                             'Move the nodes by "dragNdropping" with Shift + Click. ' +
                                              'Click anywhere or press any other key to unpause.')
             self.redraw()
             Gtk.main()
