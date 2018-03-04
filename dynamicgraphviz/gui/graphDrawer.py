@@ -31,6 +31,7 @@ from copy import copy
 from dynamicgraphviz.exceptions.graph_errors import *
 from dynamicgraphviz.graph.undirectedgraph import UndirectedNode, Edge
 from dynamicgraphviz.graph.directedgraph import DirectedNode, Arc
+import random
 
 __author__ = "Dimitri Watel"
 __copyright__ = "Copyright 2018, dynamicgraphviz"
@@ -349,15 +350,27 @@ class GraphDrawer(Gtk.Window):
             Gtk.main()
 
     def place_nodes(self, doanimate=False):
-        """Automatically replace all the nodes using a force directed graph drawing algorithm.
+        """Automatically replace all the nodes using a force directed graph drawing algorithm of Kamada and Kawai.
 
-        Automatically replace all the nodes using an algorithm adapted from the force directed graph drawing algorithm
-        given at https://cs.brown.edu/~rt/gdhandbook/chapters/force-directed.pdf at page number 387 (5th page of the
-        pdf). The temperature starts at 50 and are multiplied by 0.99 at each iteration. The number of iterations is 500
-        times the number of nodes. Those values are purely empirical.
-        A repulsion force from the bounds is added :
-        for each node at position (x, y), there are 4 repulsions from (x, 0), (x, HEIGHT), (0, y) and (WIDTH, y),
-        this forces the nodes to stay away from the boundaries.
+        Automatically move all the nodes using an algorithm adapted from the force directed graph drawing algorithm of
+        Kamada and Kawai given at https://cs.brown.edu/~rt/gdhandbook/chapters/force-directed.pdf. The algorithm is
+        run on every connected component.
+
+        If the algorithm reached an non-satisfying local minimum (detected if the number of iterations reaches 1000
+        times the number of nodes), the positions of the nodes are randomly reset. Usually the reset is not done more
+        than once for small graphs (less than 30 nodes). However, if more than 10 resets are done, the algorithm just
+        give up and returns the positions of the last local minimum.
+
+        Then each connected component is placed using the following algorithm:
+        - draw a rectangle arround each connected component
+        - sort every component by decreasing size
+        - place the first component in the upper left corner
+        - for each other component C, for each vertice (x,y) of a rectangle of any placed component, except the upper left
+        vertice, try to place the upper left vertice of the rectangle of C at position (x,y). Greedely choose the
+        position that minimize the maximum between height and width of the drawing and such that no two rectangles
+        intersect.
+
+        The whole graph drawing is resized so that every node is drawn inside the window.
 
         If the keyword argument doanimate is True, the moving is animated, otherwise the nodes are instantly moved from
         their current positions to the new ones. The animation is done using the method `move_node`. There is no need
@@ -383,10 +396,13 @@ class GraphDrawer(Gtk.Window):
 
     def _place_nodes_kamada_kawai_algorithm(self):
 
+        MAXIMUM_ITERATIONS_PER_NODE = 100
+        MAXIMUM_RESET = 10
+
         # Init the shortest path distances
         dists = {}
         for v in self.__graph:
-            dists[v] = breadth_first_search(self.__graph, v)
+            dists[v] = _breadth_first_search(self.__graph, v)
 
         # Init the Kamada-Kawai parameters
         l0 = NODE_RADIUS * 8
@@ -495,21 +511,48 @@ class GraphDrawer(Gtk.Window):
             # Move it to a position where the energy is minimum (assuming the other nodes are not moving)
             # Start again until the maximum gradient is under an epsilon constant.
             u, dlt = max(((u, delta(u)) for u in comp), key=lambda x: x[1])
+
+            # Number of times we reset the positions of all nodes to avoid local minimum,
+            # If it reaches MAXIMUM_RESET, we stop the calculations.
+            reset_index = 0
+
+            # Number of times the outer loop is done, if it reaches MAXIMUM_ITERATIONS_PER_NODE * number of nodes,
+            # we reset the positions of the nodes
+            outer_iteration = 0
             while dlt > epsilon:
-                print(u, dlt)
+
+                outer_iteration += 1
+
+                # Number of times the inner loop is done, if it reaches MAXIMUM_ITERATIONS_PER_NODE * number of nodes,
+                # we reset the positions of the nodes
+                inner_iteration = 0
 
                 while dlt > epsilon:
-                    dx, dy = solve(u)
-                    posi = positions[u]
-                    posi.x += dx
-                    posi.y += dy
+                    inner_iteration += 1
+                    if outer_iteration > MAXIMUM_ITERATIONS_PER_NODE * len(self.__graph) \
+                            or inner_iteration > MAXIMUM_ITERATIONS_PER_NODE * len(self.__graph):
+                        if reset_index > MAXIMUM_RESET:  # Give up
+                            return
 
-                    dlt = delta(u)
+                        for v in comp:
+                            positions[v].x = random.randint(0, WIDTH)
+                            positions[v].y = random.randint(0, HEIGHT)
+                        outer_iteration = 0
+
+                        reset_index += 1
+                        break
+                    else:
+                        dx, dy = solve(u)
+                        posi = positions[u]
+                        posi.x += dx
+                        posi.y += dy
+
+                        dlt = delta(u)
 
                 u, dlt = max(((u, delta(u)) for u in comp), key=lambda x: x[1])
 
         # Place all the connected components independantly
-        components = connected_components(self.__graph)
+        components = _connected_components(self.__graph)
         for comp in components:
             place_component(comp)
 
@@ -527,24 +570,30 @@ class GraphDrawer(Gtk.Window):
         maxsy = {comp: max(positions[u].y for u in comp) for comp in components}
         ratios = {comp: max(maxsy[comp] - minsy[comp], 4 * NODE_RADIUS) / max(maxsx[comp] - minsx[comp],
                                                                               4 * NODE_RADIUS) for comp in components}
-
-
-        # Rectangles of each component
+        # Rectangle of the largest component
         rm1 = ratios[components[-1]]
         rectm1 = (0, 0, WIDTH, WIDTH * rm1) if rm1 <= 1 else (0, 0, HEIGHT / rm1, HEIGHT)
+
+        # Rectangles of each other component
         rectangles = {components[-1]: rectm1}
+        # Ratio between the size of the component and the drawing area.
         area_size_ratio = rectm1[2] * rectm1[3] / len(components[-1])
 
+        # Current size of the drawing (assuming only the largest component is drawn).
         wmax = rectm1[2]
         hmax = rectm1[3]
 
+        # Place each other component.
         for i, comp in enumerate(reversed(components[:-1])):
             index = len(components) - 2 - i
 
+            # The ratio between the size of the component and the drawing area should be the same for each component.
+            # We can then deduce the width and the height of the rectangle of the component.
             r1 = ratios[comp]
             w1 = math.sqrt(area_size_ratio * len(comp) / r1)
             h1 = w1 * r1
 
+            # Set of points where the upper left corner of the component can be placed.
             candidates = []
             for comp2 in components[index + 1:]:
                 x2, y2, w2, h2 = rectangles[comp2]
@@ -552,19 +601,42 @@ class GraphDrawer(Gtk.Window):
                 candidates.append((x2, y2 + h2))
                 candidates.append((x2 + w2, y2 + h2))
 
-            def score(x1, y1):
-
+            def _score(x1, y1):
+                """ Score of the candidate position. Check if, by placing the rectangle at that position, there is
+                an intersected rectangle among the rectangles of the already placed components. If no such overlapping
+                occurs, the position is valid. In that case, the score is the maximum between width and height of the
+                drawing."""
                 for comp2 in components[index + 1:]:
                     r2 = rectangles[comp2]
-                    if intersect((x1, y1, w1, h1), r2):
+
+                    if _intersect((x1, y1, w1, h1), r2):
                         return None
 
                 return max(wmax, x1 + w1, hmax, y1 + h1)
 
-            scores = list((candidate, score(*candidate)) for candidate in candidates)
+            # Compute the score of each candidate position
+            scores = list((candidate, _score(*candidate)) for candidate in candidates)
+
+            # Return the valid position minimizing the maximum between the height and the width of the drawing.
             x1, y1 = min((scrs for scrs in scores if scrs[1] is not None), key=lambda x: x[1])[0]
             rectangles[comp] = (x1, y1, w1, h1)
 
+        # Rescale each rectangle so that it fits with the window.
+
+        minx = min(x for x, _, _, _ in rectangles.values())
+        maxx = max(x + w for x, _, w, _ in rectangles.values())
+        miny = min(y for _, y, _, _ in rectangles.values())
+        maxy = max(y + h for _, y, _, h in rectangles.values())
+
+        for comp in components:
+            x, y, w, h = rectangles[comp]
+            x *= WIDTH / (maxx - minx)
+            w *= WIDTH / (maxx - minx)
+            y *= HEIGHT / (maxy - miny)
+            h *= HEIGHT / (maxy - miny)
+            rectangles[comp] = (x, y, w, h)
+
+        # Rescale and move each component in its rectangle.
         for comp in components:
             x, y, w, h = rectangles[comp]
 
@@ -585,22 +657,6 @@ class GraphDrawer(Gtk.Window):
                     maxy - miny)
                 else:
                     positions[u].y = y + h // 2
-
-        minx = min(positions[u].x for u in self.__graph)
-        miny = min(positions[u].y for u in self.__graph)
-        maxx = max(positions[u].x for u in self.__graph)
-        maxy = max(positions[u].y for u in self.__graph)
-
-        for u in self.__graph:
-            if maxx != minx:
-                positions[u].x = 2 * NODE_RADIUS + (WIDTH - 4 * NODE_RADIUS) * (positions[u].x - minx)/ (maxx - minx)
-            else:
-                positions[u].x = WIDTH // 2
-
-            if maxy != miny:
-                positions[u].y = 2 * NODE_RADIUS + (HEIGHT - 4 * NODE_RADIUS) * (positions[u].y - miny) / (maxy - miny)
-            else:
-                positions[u].y = HEIGHT // 2
 
         return positions
 
