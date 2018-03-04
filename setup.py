@@ -6,7 +6,7 @@ setup(
     name='dynamicgraphviz',
     version=dynamicgraphviz.__version__,
     packages=['dynamicgraphviz', 'dynamicgraphviz.graph', 'dynamicgraphviz.gui', 'dynamicgraphviz.gui.animations',
-              'dynamicgraphviz.helpers', 'dynamicgraphviz.exceptions'],
+              'dynamicgraphviz.exceptions'],
     url='https://github.com/mouton5000/dynamicgraphviz',
     license='MIT',
     author=dynamicgraphviz.__author__,
