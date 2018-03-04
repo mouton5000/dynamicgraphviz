@@ -26,8 +26,6 @@ import math
 import cairo
 from pubsub import pub
 from euclid3 import Point2, Vector2
-from dynamicgraphviz.helpers.geomhelper import rotate, intersect
-from dynamicgraphviz.helpers.components import connected_components, breadth_first_search
 from dynamicgraphviz.gui.animations.easing_animations import get_nb_animating_with_easing, animate_with_easing, sininout
 from copy import copy
 from dynamicgraphviz.exceptions.graph_errors import *
@@ -1082,8 +1080,8 @@ class _ArcItem:
 
         if self.directed:
             cr.set_source_rgb(*self.color)
-            par1 = pv1 - rotate(uv, math.pi / 4) * LINK_ARROW_LENGTH
-            par2 = pv1 - rotate(uv, -math.pi / 4) * LINK_ARROW_LENGTH
+            par1 = pv1 - _rotate(uv, math.pi / 4) * LINK_ARROW_LENGTH
+            par2 = pv1 - _rotate(uv, -math.pi / 4) * LINK_ARROW_LENGTH
 
             cr.move_to(par1.x, par1.y)
             cr.line_to(pv1.x, pv1.y)
@@ -1091,7 +1089,7 @@ class _ArcItem:
             cr.stroke()
 
         if self.label is not None:
-            nuv = rotate(uv, math.pi / 2)
+            nuv = _rotate(uv, math.pi / 2)
             if nuv.y > 0:
                 nuv = nuv * -1
 
@@ -1104,3 +1102,65 @@ class _ArcItem:
             cr.move_to(plabel.x - width / 2 - x, plabel.y - height / 2 - y)
             cr.show_text(self.label)
             cr.stroke()
+
+
+def _rotate(v, alpha):
+    """Return a new 2D vector equal to v rotated with the angle alpha."""
+    cs = math.cos(alpha)
+    sn = math.sin(alpha)
+    return Vector2(v.x * cs - v.y * sn, v.x * sn + v.y * cs)
+
+
+def _intersect(rect1, rect2):
+    """ Return True if the two rectangles rect1 and rect2 intersect. """
+    x1, y1, w1, h1 = rect1
+    x2, y2, w2, h2 = rect2
+    return (x1 + w1 > x2 and x2 + w2 > x1) and (y1 + h1 > y2 and y2 + h2 > y1)
+
+
+def _connected_components(g):
+
+    if len(g) == 0:
+        return []
+
+    visited = set()
+    comps = []
+    while len(visited) != len(g):
+        for u in g:
+            if u not in visited:
+                break
+
+        dists = _breadth_first_search(g, u)
+        comp = [v for v in g if v in dists]
+        visited.update(comp)
+        comps.append(tuple(comp))
+    return comps
+
+
+def _breadth_first_search(g, v):
+    """
+    Return, for each node u, the breadth first search distance from v to u in the graph g.
+
+    For each node u, returns the distance of a shortest path from v to u in an undirected unweighted graph using the
+    breadth first search algorithm.
+
+    :param g: an undirected graph
+    :param v: a node of g
+    :return: a dictionary associating for each node u the distance of a shortest path from v to u in g
+    """
+
+    to_visit = [v]
+    visited = set()
+    dist = {v: 0}
+
+    while len(to_visit) != 0:
+        u = to_visit.pop(0)
+        visited.add(u)
+        for v in u.neighbors:
+            if v in visited:
+                continue
+            if v not in dist or dist[v] > dist[u] + 1:
+                dist[v] = dist[u] + 1
+            to_visit.append(v)
+
+    return dist
